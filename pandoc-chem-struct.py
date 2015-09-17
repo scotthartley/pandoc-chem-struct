@@ -11,9 +11,9 @@ from pandocfilters import toJSONFilter, Str, Subscript, Superscript
 import re
 
 # Pattern for structures in md.
-ID_PAT = re.compile('s:\{(.*)\}([\s,.]?)')
+ID_PAT = re.compile('s:\{(.*)\}(.*)')
 # Used to identify charges at end of formula.
-CHARGE_PAT = re.compile('(\w*)\^?([0-9]*[-−–+])')
+CHARGE_PAT = re.compile('(\w*)\^?([0-9]*[-–−+])')
 
 def chem_struct (key, val, fmt, meta):
     if key == 'Str' and ID_PAT.match(val):
@@ -25,7 +25,7 @@ def chem_struct (key, val, fmt, meta):
             # Replace hyphen with minus sign
             charge = charge.replace('-', '−') 
         else:
-            formula, charge = raw_formula, ''
+            formula, charge = raw_formula, None
 
         formatted_formula = []
 
@@ -35,7 +35,11 @@ def chem_struct (key, val, fmt, meta):
             else:
                 formatted_formula.append(Str(d))
 
-        formatted_charge = [Superscript([Str(charge)])]
+        if charge:
+            formatted_charge = [Superscript([Str(charge)])]
+        else:
+            formatted_charge = []
+
         formatted_end = [Str(end)]
 
         return formatted_formula + formatted_charge + formatted_end
