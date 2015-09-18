@@ -11,14 +11,14 @@ from pandocfilters import toJSONFilter, Str, Subscript, Superscript
 import re
 
 # Pattern for structures in md.
-ID_PAT = re.compile('s:\{(.*)\}(.*)')
+ID_PAT = re.compile('(.*)s:\{(.*)\}(.*)')
 # Used to identify charges at end of formula.
 CHARGE_PAT = re.compile('(\w*)\^?([0-9]*[-–−+])')
 
 def chem_struct (key, val, fmt, meta):
     if key == 'Str' and ID_PAT.match(val):
         # Store punctuation after formula in end.
-        raw_formula, end = ID_PAT.match(val).groups()
+        start, raw_formula, end = ID_PAT.match(val).groups()
         
         if CHARGE_PAT.match(raw_formula):
             formula, charge = CHARGE_PAT.match(raw_formula).groups()
@@ -40,9 +40,11 @@ def chem_struct (key, val, fmt, meta):
         else:
             formatted_charge = []
 
+        formatted_start = [Str(start)]
         formatted_end = [Str(end)]
 
-        return formatted_formula + formatted_charge + formatted_end
+        return formatted_start + formatted_formula + formatted_charge \
+               + formatted_end
 
 if __name__ == '__main__':
     toJSONFilter(chem_struct)
