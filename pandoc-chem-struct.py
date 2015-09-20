@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
 """Pandoc filter to format simple chemical structures.
 
-Structures specified as in s:{CH3CH2O-}, s:{SO3^2-}
+Structures specified as in s:{CH3CH2O-}, s:{SO4^2-}
 are converted to formatted structures such as CH~3~CH~2~OH^-^, 
-SO~3~^2−^.
+SO~4~^2−^.
 
 """
 
