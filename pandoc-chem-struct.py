@@ -3,11 +3,11 @@
 
 Structures specified as in s:{CH3CH2O-}, s:{SO4^2-}
 are converted to formatted structures such as CH~3~CH~2~OH^-^, 
-SO~4~^2−^.
+SO~4~^2−^. For LaTeX-based conversions, the mhchem package is used.
 
 """
 
-from pandocfilters import toJSONFilter, Str, Subscript, Superscript
+from pandocfilters import toJSONFilter, Str, Subscript, Superscript, RawInline
 import re
 
 # Pattern for structures in md.
@@ -17,34 +17,35 @@ CHARGE_PAT = re.compile('(\w*)\^?([0-9]*[-–−+])')
 
 def chem_struct (key, val, fmt, meta):
     if key == 'Str' and ID_PAT.match(val):
-        # Store punctuation after formula in end.
         start, raw_formula, end = ID_PAT.match(val).groups()
-        
-        if CHARGE_PAT.match(raw_formula):
-            formula, charge = CHARGE_PAT.match(raw_formula).groups()
-            # Replace hyphen with minus sign
-            charge = charge.replace('-', '−') 
+        if fmt in ['latex','pdf']: # Use mhchem package for latex
+            return [RawInline(fmt, "\ce{" + raw_formula + "}")]
         else:
-            formula, charge = raw_formula, None
-
-        formatted_formula = []
-
-        for d in formula:
-            if d.isdigit():
-                formatted_formula.append(Subscript([Str(d)]))
+            if CHARGE_PAT.match(raw_formula):
+                formula, charge = CHARGE_PAT.match(raw_formula).groups()
+                # Replace hyphen with minus sign
+                charge = charge.replace('-', '−') 
             else:
-                formatted_formula.append(Str(d))
+                formula, charge = raw_formula, None
 
-        if charge:
-            formatted_charge = [Superscript([Str(charge)])]
-        else:
-            formatted_charge = []
+            formatted_formula = []
 
-        formatted_start = [Str(start)]
-        formatted_end = [Str(end)]
+            for d in formula:
+                if d.isdigit():
+                    formatted_formula.append(Subscript([Str(d)]))
+                else:
+                    formatted_formula.append(Str(d))
 
-        return formatted_start + formatted_formula + formatted_charge \
-               + formatted_end
+            if charge:
+                formatted_charge = [Superscript([Str(charge)])]
+            else:
+                formatted_charge = []
+
+            formatted_start = [Str(start)]
+            formatted_end = [Str(end)]
+
+            return formatted_start + formatted_formula + formatted_charge \
+                   + formatted_end
 
 if __name__ == '__main__':
     toJSONFilter(chem_struct)
