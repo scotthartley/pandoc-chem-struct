@@ -19,7 +19,9 @@ def chem_struct (key, val, fmt, meta):
     if key == 'Str' and ID_PAT.match(val):
         start, raw_formula, end = ID_PAT.match(val).groups()
         if fmt in ['latex','pdf']: # Use mhchem package for latex
-            return [RawInline(fmt, "\ce{" + raw_formula + "}")]
+            return [Str(start)] \
+                   + [RawInline(fmt, "\ce{" + raw_formula + "}")] \
+                   + [Str(end)]
         else:
             if CHARGE_PAT.match(raw_formula):
                 formula, charge = CHARGE_PAT.match(raw_formula).groups()
