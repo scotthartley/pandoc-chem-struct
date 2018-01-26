@@ -22,6 +22,10 @@ def chem_struct (key, val, fmt, meta):
             return [Str(start)] \
                    + [RawInline(fmt, "\ce{" + raw_formula + "}")] \
                    + [Str(end)]
+        elif fmt == 'beamer':
+            return [Str(start)] \
+                   + [RawInline('latex', "\ce{" + raw_formula + "}")] \
+                   + [Str(end)]
         else:
             if CHARGE_PAT.match(raw_formula):
                 formula, charge = CHARGE_PAT.match(raw_formula).groups()
