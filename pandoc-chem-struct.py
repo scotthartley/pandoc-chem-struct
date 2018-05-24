@@ -11,47 +11,52 @@ from pandocfilters import toJSONFilter, Str, Subscript, Superscript, RawInline
 import re
 
 # Pattern for structures in md.
-ID_PAT = re.compile('(.*)s:\{(.*)\}(.*)')
+ID_PAT = re.compile('(s:\{[^\s\}]*\})')
+# Pattern to separate formula from "s:{}" label.
+STRUCT_PAT = re.compile('s:\{([^\s\}]*)\}')
 # Used to identify charges at end of formula.
 CHARGE_PAT = re.compile('(\w*)\^?([0-9]*[-–−+])')
 
 def chem_struct (key, val, fmt, meta):
     if key == 'Str' and ID_PAT.match(val):
-        start, raw_formula, end = ID_PAT.match(val).groups()
-        if fmt in ['latex','pdf']: # Use mhchem package for latex
-            return [Str(start)] \
-                   + [RawInline(fmt, "\ce{" + raw_formula + "}")] \
-                   + [Str(end)]
-        elif fmt == 'beamer':
-            return [Str(start)] \
-                   + [RawInline('latex', "\ce{" + raw_formula + "}")] \
-                   + [Str(end)]
-        else:
-            if CHARGE_PAT.match(raw_formula):
-                formula, charge = CHARGE_PAT.match(raw_formula).groups()
-                # Replace hyphen with minus sign
-                charge = charge.replace('-', '−') 
-            else:
-                formula, charge = raw_formula, None
-
-            formatted_formula = []
-
-            for d in formula:
-                if d.isdigit():
-                    formatted_formula.append(Subscript([Str(d)]))
+        
+        new_val = []
+        for s in ID_PAT.split(val):
+            if STRUCT_PAT.match(s):
+                clean_s = STRUCT_PAT.match(s).groups()[0] # Removes "s:{}" tags
+                
+                if fmt in ['latex','pdf']: # Use mhchem package for latex
+                    new_val += [RawInline(fmt, "\ce{" + clean_s + "}")]
+                
+                elif fmt == 'beamer':
+                    new_val += [RawInline('latex', "\ce{" + clean_s + "}")]
+                
                 else:
-                    formatted_formula.append(Str(d))
+                    if CHARGE_PAT.match(clean_s):
+                        formula, charge = CHARGE_PAT.match(clean_s).groups()
+                        # Replace hyphen with minus sign
+                        charge = charge.replace('-', '−') 
+                    else:
+                        formula, charge = clean_s, None
 
-            if charge:
-                formatted_charge = [Superscript([Str(charge)])]
+                    formatted_formula = []
+
+                    for d in formula:
+                        if d.isdigit():
+                            formatted_formula.append(Subscript([Str(d)]))
+                        else:
+                            formatted_formula.append(Str(d))
+
+                    if charge:
+                        formatted_charge = [Superscript([Str(charge)])]
+                    else:
+                        formatted_charge = []
+
+                    new_val += formatted_formula + formatted_charge
             else:
-                formatted_charge = []
+                new_val += [Str(s)]
 
-            formatted_start = [Str(start)]
-            formatted_end = [Str(end)]
-
-            return formatted_start + formatted_formula + formatted_charge \
-                   + formatted_end
+        return new_val
 
 if __name__ == '__main__':
     toJSONFilter(chem_struct)
