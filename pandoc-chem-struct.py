@@ -18,7 +18,7 @@ STRUCT_PAT = re.compile('s:\{([^\s\}]*)\}')
 CHARGE_PAT = re.compile('(\w*)\^?([0-9]*[-–−+])')
 
 def chem_struct (key, val, fmt, meta):
-    if key == 'Str' and ID_PAT.match(val):
+    if key == 'Str' and ID_PAT.search(val):
         
         new_val = []
         for s in ID_PAT.split(val):
