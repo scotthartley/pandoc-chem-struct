@@ -1,0 +1,8 @@
+#! /usr/bin/env python3
+"""Executable interface to pandoc_chem_struct
+
+"""
+
+import pandoc_chem_struct
+
+pandoc_chem_struct.main()
